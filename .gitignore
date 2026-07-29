@@ -1,0 +1,52 @@
+# ── Python ────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ───────────────────────
+venv/
+.venv/
+env/
+.env
+
+# ── Demo / local database ──────────────────────
+# demo.db is auto-generated at runtime — do not commit it
+demo.db
+*.db
+*.sqlite3
+
+# ── IDE / OS ───────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# ── Secrets / env files ────────────────────────
+.env
+.env.*
+secrets.py
+
+# ── Logs ──────────────────────────────────────
+*.log
+logs/
+
+# ── PWA generated icons (regenerate with gen_icons.py) ────
+# static/icons/
+
+# ── Temp files ────────────────────────────────
+*.tmp
+*.bak
+gen_icons.py
+
+# ── Old root-level duplicates (superseded by templates/ and static/) ──
+Index.html
+Main.js
+Style.css
+Config.py
+Db.py

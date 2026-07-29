@@ -1,0 +1,580 @@
+/* ═══════════════════════════════════════════════
+   TCOE ID Generation — Nokia PWA
+   Minimalist · Clean · Brand-aligned
+═══════════════════════════════════════════════ */
+
+:root {
+  --nokia-blue:   #005AFF;
+  --nokia-dark:   #001F6B;
+  --nokia-light:  #E8F0FF;
+  --white:        #ffffff;
+  --gray-50:      #F8F9FC;
+  --gray-100:     #EEF0F6;
+  --gray-200:     #D6DAE8;
+  --gray-400:     #8B91A8;
+  --gray-600:     #4A5068;
+  --gray-900:     #0D1020;
+  --success:      #00B050;
+  --warning:      #F59E0B;
+  --yellow:       #F59E0B;
+  --error:        #D92B2B;
+  --radius-sm:    6px;
+  --radius:       10px;
+  --radius-lg:    16px;
+  --shadow-sm:    0 1px 3px rgba(0,26,102,.08);
+  --shadow:       0 4px 16px rgba(0,26,102,.10);
+  --shadow-lg:    0 8px 32px rgba(0,26,102,.14);
+  --font:         'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+  --transition:   .18s ease;
+}
+
+/* ── RESET ──────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--gray-50);
+  color: var(--gray-900);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── LAYOUT ─────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+}
+
+/* ── HEADER / NAVBAR ─────────────────────────── */
+.site-nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-100);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-inner {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Nokia wordmark SVG logo */
+.nokia-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.nokia-wordmark {
+  height: 22px;
+  width: auto;
+}
+
+.nav-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  padding-left: 12px;
+  border-left: 1px solid var(--gray-200);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--success);
+}
+
+.status-indicator.demo {
+  color: var(--yellow);
+}
+
+.status-indicator.demo .status-dot {
+  background: var(--yellow);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse 2.4s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .4; transform: scale(.85); }
+}
+
+/* ── PAGE HERO ───────────────────────────────── */
+.page-hero {
+  padding: 28px 0 8px;
+  text-align: left;
+}
+
+.page-hero h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -.4px;
+  line-height: 1.25;
+}
+
+.page-hero h1 span {
+  color: var(--nokia-blue);
+}
+
+.page-hero p {
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--gray-400);
+  letter-spacing: .01em;
+}
+
+/* ── CARD ────────────────────────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.card-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.card-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background: var(--nokia-blue);
+  border-radius: 2px;
+}
+
+/* ── FORM FIELDS ─────────────────────────────── */
+.field { margin-bottom: 14px; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 6px;
+  letter-spacing: .01em;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.count-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+/* ── SELECT ──────────────────────────────────── */
+.select-wrap { position: relative; }
+
+.select-wrap select {
+  width: 100%;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  color: var(--gray-900);
+  font-family: var(--font);
+  font-size: 14px;
+  padding: 10px 36px 10px 12px;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.select-wrap select:focus {
+  outline: none;
+  border-color: var(--nokia-blue);
+  box-shadow: 0 0 0 3px rgba(0,90,255,.12);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-400);
+  pointer-events: none;
+  font-size: 10px;
+}
+
+/* ── NUMBER INPUT ────────────────────────────── */
+input[type="number"] {
+  width: 100%;
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  color: var(--gray-900);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  padding: 9px 12px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+input[type="number"]:focus {
+  outline: none;
+  border-color: var(--nokia-blue);
+  box-shadow: 0 0 0 3px rgba(0,90,255,.12);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* ── CHECKBOX ────────────────────────────────── */
+.checkbox-field {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 10px;
+}
+
+.checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--gray-600);
+  user-select: none;
+}
+
+.checkbox-wrap input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--nokia-blue);
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+/* ── GENERATE BUTTON ─────────────────────────── */
+.btn-generate {
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px 20px;
+  background: var(--nokia-blue);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  box-shadow: 0 2px 8px rgba(0,90,255,.25);
+}
+
+.btn-generate:hover {
+  background: var(--nokia-dark);
+  box-shadow: 0 4px 16px rgba(0,90,255,.32);
+}
+
+.btn-generate:active { transform: scale(.98); }
+
+.btn-generate:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── RESULT BOX ──────────────────────────────── */
+.result-box {
+  display: none;
+  margin-top: 16px;
+  background: var(--nokia-light);
+  border: 1.5px solid var(--nokia-blue);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.result-box.show { display: block; }
+
+.result-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--nokia-blue);
+  margin-bottom: 8px;
+}
+
+.result-id {
+  font-family: var(--font-mono);
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--nokia-dark);
+  letter-spacing: .03em;
+  word-break: break-all;
+}
+
+.result-extra {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--nokia-blue);
+  opacity: .65;
+  margin-top: 6px;
+  line-height: 1.9;
+}
+
+.result-network {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--gray-400);
+  margin-top: 8px;
+  text-transform: uppercase;
+}
+
+.btn-copy {
+  margin-top: 12px;
+  background: transparent;
+  border: 1.5px solid var(--nokia-blue);
+  border-radius: var(--radius-sm);
+  color: var(--nokia-blue);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.btn-copy:hover {
+  background: var(--nokia-blue);
+  color: var(--white);
+}
+
+/* ── ERROR BOX ───────────────────────────────── */
+.error-box {
+  display: none;
+  margin-top: 12px;
+  background: #FFF0F0;
+  border: 1.5px solid #FFBDBD;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--error);
+}
+
+.error-box.show { display: block; }
+
+/* ── HISTORY CARD ────────────────────────────── */
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.history-controls .select-wrap {
+  flex: 1;
+  min-width: 130px;
+}
+
+.btn-secondary {
+  background: var(--gray-50);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  color: var(--gray-600);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.btn-secondary:hover {
+  border-color: var(--nokia-blue);
+  color: var(--nokia-blue);
+}
+
+/* ── TABLE ───────────────────────────────────── */
+.hist-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hist-table th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1.5px solid var(--gray-100);
+}
+
+.hist-table td {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--gray-600);
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+
+.hist-table td:first-child {
+  color: var(--gray-900);
+  font-weight: 500;
+}
+
+.hist-table tr:last-child td { border-bottom: none; }
+.hist-table tr:hover td { background: var(--gray-50); }
+
+.empty-row {
+  text-align: center !important;
+  color: var(--gray-400) !important;
+  font-family: var(--font) !important;
+  padding: 24px 0 !important;
+  font-size: 13px !important;
+}
+
+/* ── FOOTER ──────────────────────────────────── */
+.site-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--gray-400);
+  padding: 20px 16px;
+  border-top: 1px solid var(--gray-100);
+  background: var(--white);
+  margin-top: auto;
+}
+
+/* ── TOAST ───────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--gray-900);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 99px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+  white-space: nowrap;
+  z-index: 999;
+  box-shadow: var(--shadow-lg);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.err { background: var(--error); }
+
+/* ── PWA INSTALL BANNER ──────────────────────── */
+.install-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: var(--nokia-light);
+  border: 1.5px solid rgba(0,90,255,.2);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--nokia-dark);
+}
+
+.install-banner.show { display: flex; }
+
+.btn-install {
+  margin-left: auto;
+  background: var(--nokia-blue);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dismiss-install {
+  background: none;
+  border: none;
+  color: var(--gray-400);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+/* ── RESPONSIVE ──────────────────────────────── */
+@media (max-width: 400px) {
+  .two-col   { grid-template-columns: 1fr; }
+  .count-row { grid-template-columns: 1fr; }
+  .nav-badge { display: none; }
+}
