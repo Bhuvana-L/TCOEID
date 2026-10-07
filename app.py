@@ -46,30 +46,66 @@ def api_status():
 def api_generate():
     """
     POST /api/generate
-    Body: {
-        "use_case":        "BCALL",
-        "caller_network":  "4G",
-        "receiver_network":"4G",
-        "count":           1,
-        "reserve":         false
-    }
-    Returns: {
-        "ids":             ["BCALL009004--"],
-        "network_code":    "009",
-        "caller_network":  "4G",
-        "receiver_network":"4G",
-        ...
-    }
+
+    Basic call:
+        { "use_case": "BCALL", "caller_network": "4G",
+          "receiver_network": "4G", "count": 1, "reserve": false }
+
+    Conference call:
+        { "use_case": "CONFE",
+          "participants": ["4G", "5G", "WIFI"],
+          "count": 1, "reserve": false }
+
+    Nokia rule: Conference produces a single TCOE ID.
+    Use the FIRST participant's network as caller and the LAST
+    participant's network as receiver. Middle participants are
+    ignored for the mapping lookup; only one ID is generated.
     """
-    data             = request.get_json(force=True)
-    use_case         = data.get("use_case",         "").strip().upper()
-    caller_network   = data.get("caller_network",   "").strip().upper()
-    receiver_network = data.get("receiver_network", "").strip().upper()
-    count            = int(data.get("count",   1))
-    reserve          = bool(data.get("reserve", False))
+    data        = request.get_json(force=True)
+    use_case    = data.get("use_case",    "").strip().upper()
+    description = data.get("description", "").strip()
+    count       = 1     # always one ID per generate
+    reserve     = True  # always reserve
 
     if not use_case:
         return jsonify({"error": "use_case is required"}), 400
+
+    # ── Conference mode ───────────────────────────────────────
+    participants = data.get("participants")
+    if participants is not None:
+        participants = [p.strip().upper() for p in participants]
+
+        if len(participants) < 2:
+            return jsonify({"error": "Conference requires at least 2 participants"}), 400
+
+        # Nokia rule: use FIRST participant as caller, LAST as receiver.
+        # All middle participants are ignored for the mapping lookup.
+        # One single TCOE ID is generated for the entire conference.
+        caller   = participants[0]
+        receiver = participants[-1]
+        code     = get_network_code(caller, receiver)
+
+        if code is None:
+            return jsonify({
+                "error": (f"No mapping defined for {caller} → {receiver}. "
+                          "Add it to network_mapping.py.")
+            }), 400
+
+        result = generate_next_id(use_case, code, count=count,
+                                  reserve=reserve, description=description)
+        if "error" in result:
+            return jsonify(result), 500
+
+        result["participants"]  = participants
+        result["caller_network"]   = caller
+        result["receiver_network"] = receiver
+        result["network_code"]     = code
+        return jsonify(result)
+
+    # ── Basic call mode ───────────────────────────────────────
+    caller_network   = data.get("caller_network",   "").strip().upper()
+    receiver_network = data.get("receiver_network", "").strip().upper()
+
     if not caller_network or not receiver_network:
         return jsonify({"error": "caller_network and receiver_network are required"}), 400
 
@@ -80,7 +116,8 @@ def api_generate():
                       "This combination will be added to network_mapping.py.")
         }), 400
 
-    result = generate_next_id(use_case, network_code, count=count, reserve=reserve)
+    result = generate_next_id(use_case, network_code, count=count,
+                              reserve=reserve, description=description)
     if "error" in result:
         return jsonify(result), 500
 

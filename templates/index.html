@@ -54,10 +54,7 @@
 
       <span class="nav-badge">UATMN</span>
 
-      <div class="status-indicator {% if db_status.demo_mode %}demo{% endif %}">
-        <span class="status-dot"></span>
-        <span>{% if db_status.demo_mode %}Demo{% else %}Live DB{% endif %}</span>
-      </div>
+
     </div>
   </nav>
 
@@ -87,7 +84,8 @@
         <div class="field">
           <label class="field-label" for="useCase">Use Case</label>
           <div class="select-wrap">
-            <select id="useCase" name="use_case" aria-required="true">
+            <select id="useCase" name="use_case" aria-required="true"
+                    onchange="onUseCaseChange(this.value)">
               <option value="">— Select —</option>
               {% for uc in use_cases %}
               <option value="{{ uc }}">{{ uc }}</option>
@@ -98,51 +96,67 @@
         </div>
       </div>
 
-      <!-- Network pair row -->
-      <div class="field-row two-col">
-        <div class="field">
-          <label class="field-label" for="callerNet">Caller Network</label>
-          <div class="select-wrap">
-            <select id="callerNet" name="caller_network" aria-required="true">
-              <option value="">— Select —</option>
-              {% for net in network_options %}
-              <option value="{{ net }}">{{ net }}</option>
-              {% endfor %}
-            </select>
-            <span class="select-arrow" aria-hidden="true">▾</span>
+      <!-- ── BASIC CALL: Caller / Receiver ─────────────────── -->
+      <div id="networkBasic">
+        <div class="field-row two-col">
+          <div class="field">
+            <label class="field-label" for="callerNet">Caller Network</label>
+            <div class="select-wrap">
+              <select id="callerNet" name="caller_network" aria-required="true">
+                <option value="">— Select —</option>
+                {% for net in network_options %}
+                <option value="{{ net }}">{{ net }}</option>
+                {% endfor %}
+              </select>
+              <span class="select-arrow" aria-hidden="true">▾</span>
+            </div>
           </div>
-        </div>
-
-        <div class="field">
-          <label class="field-label" for="receiverNet">Receiver Network</label>
-          <div class="select-wrap">
-            <select id="receiverNet" name="receiver_network" aria-required="true">
-              <option value="">— Select —</option>
-              {% for net in network_options %}
-              <option value="{{ net }}">{{ net }}</option>
-              {% endfor %}
-            </select>
-            <span class="select-arrow" aria-hidden="true">▾</span>
+          <div class="field">
+            <label class="field-label" for="receiverNet">Receiver Network</label>
+            <div class="select-wrap">
+              <select id="receiverNet" name="receiver_network" aria-required="true">
+                <option value="">— Select —</option>
+                {% for net in network_options %}
+                <option value="{{ net }}">{{ net }}</option>
+                {% endfor %}
+              </select>
+              <span class="select-arrow" aria-hidden="true">▾</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="field-row count-row">
-        <div class="field">
-          <label class="field-label" for="count">Count</label>
-          <input type="number" id="count" value="1" min="1" max="20"
-                 aria-label="Number of IDs to generate" />
+      <!-- ── CONFERENCE: Participants ───────────────────────── -->
+      <div id="networkConference" style="display:none;">
+        <div id="participantList">
+          <!-- participant rows injected by JS -->
         </div>
-        <div class="field checkbox-field">
-          <label class="checkbox-wrap">
-            <input type="checkbox" id="reserve" />
-            <span>Reserve IDs</span>
-          </label>
+        <button type="button" class="btn-add-participant"
+                onclick="addParticipant()" aria-label="Add participant">
+          + Add Participant
+        </button>
+      </div>
+
+      <!-- hidden template — cloned by JS for each participant row -->
+      <template id="participantTemplate">
+        {% for net in network_options %}
+        <option value="{{ net }}">{{ net }}</option>
+        {% endfor %}
+      </template>
+
+      <!-- Description field -->
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label" for="description">Description</label>
+          <input type="text" id="description" name="description"
+                 placeholder="e.g. 4G_A_TO_4G_B_BASIC_CALL_B_REJECTS"
+                 aria-label="Test case description"
+                 autocomplete="off" spellcheck="false" />
         </div>
       </div>
 
-      <button class="btn-generate" id="genBtn" onclick="generateID()"
-              aria-label="Generate TCOE ID">
+      <button class="btn-generate" id="genBtn" onclick="openGenerateConfirm()"
+          aria-label="Generate TCOE ID">
         Generate
       </button>
 
@@ -187,11 +201,12 @@
             <th scope="col">TCOE ID</th>
             <th scope="col">Network</th>
             <th scope="col">Seq #</th>
+            <th scope="col">Description</th>
           </tr>
         </thead>
         <tbody id="histBody">
           <tr>
-            <td colspan="3" class="empty-row">Select a use case above to view history</td>
+            <td colspan="4" class="empty-row">Select a use case above to view history</td>
           </tr>
         </tbody>
       </table>
@@ -208,6 +223,19 @@
 
 <!-- Toast notification -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Confirmation modal -->
+<div class="modal-backdrop" id="confirmModal" style="display:none;">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <button class="modal-close" id="confirmClose" aria-label="Close">✕</button>
+    <h2 id="confirmTitle">Generate TCOE ID?</h2>
+    <p>Do you want to generate the TCOE ID with the entered details?</p>
+    <div class="modal-actions">
+      <button class="btn-primary" id="confirmGenerate">Generate</button>
+      <button class="btn-secondary" id="confirmReset">Go Back</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── JS ────────────────────────────────────── -->
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
