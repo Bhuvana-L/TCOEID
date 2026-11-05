@@ -5,7 +5,7 @@ Nokia UATMN Master Database Integration
 
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from db import get_use_cases, generate_next_id, get_db_status
-from network_mapping import get_network_code, NETWORK_OPTIONS
+from network_mapping import get_network_code, NETWORK_OPTIONS, NETWORK_COMBO_GROUPS, NETWORK_CODE_LABELS
 import logging
 import os
 
@@ -31,7 +31,9 @@ def index():
     return render_template("index.html",
                            use_cases=use_cases,
                            network_options=NETWORK_OPTIONS,
-                           db_status=db_status)
+                           db_status=db_status,
+                           network_combo_groups=NETWORK_COMBO_GROUPS,
+                           network_code_labels=NETWORK_CODE_LABELS)
 
 
 # ── API: DB STATUS ────────────────────────────────────────────
@@ -130,11 +132,16 @@ def api_generate():
 # ── API: HISTORY ──────────────────────────────────────────────
 @app.route("/api/history")
 def api_history():
-    """GET /api/history?use_case=BCALL&limit=10"""
+    """GET /api/history?use_case=BCALL&network=009&limit=10"""
     from db import get_history
     use_case = request.args.get("use_case", "").strip().upper()
-    limit    = int(request.args.get("limit", 10))
-    return jsonify(get_history(use_case, limit))
+    network  = request.args.get("network", "").strip()
+    try:
+        limit = int(request.args.get("limit", 10))
+    except (ValueError, TypeError):
+        limit = 10
+    limit = max(1, min(limit, 100))
+    return jsonify(get_history(use_case, network, limit))
 
 
 # ── ENTRY POINT ───────────────────────────────────────────────

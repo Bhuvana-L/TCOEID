@@ -188,7 +188,10 @@ async function generateID() {
     } else {
       showResult(data, isConf);
       const hc = document.getElementById("histCase");
-      if (hc) { hc.value = uc; loadHistory(); }
+      const hn = document.getElementById("histNetwork");
+      if (hc) hc.value = uc;
+      if (hn) hn.value = data.network_code || "";
+      loadHistory();
     }
   } catch (err) {
     showError("Network error — " + err.message);
@@ -211,12 +214,12 @@ function showResult(data, isConference = false) {
   if (isConference) {
     rid.textContent = "";
     extra.innerHTML = ids
-      .map(id => `<span class="conf-id">${id}</span>`)
+      .map(id => `<span class="conf-id">${escapeHtml(id)}</span>`)
       .join("");
   } else {
     rid.textContent = ids[0] || "";
     if (ids.length > 1) {
-      extra.innerHTML = ids.slice(1).map(id => `<span>${id}</span>`).join("<br>");
+      extra.innerHTML = ids.slice(1).map(id => `<span>${escapeHtml(id)}</span>`).join("<br>");
     } else {
       extra.textContent = "";
     }
@@ -267,25 +270,33 @@ function fallbackCopy(text) {
 // ── HISTORY ───────────────────────────────────
 async function loadHistory() {
   const uc    = document.getElementById("histCase").value;
+  const net   = document.getElementById("histNetwork").value;
   const tbody = document.getElementById("histBody");
   tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Loading…</td></tr>`;
 
   try {
-    const res  = await fetch(`/api/history?use_case=${encodeURIComponent(uc)}&limit=10`);
+    const params = new URLSearchParams();
+    if (uc)  params.set("use_case", uc);
+    if (net) params.set("network", net);
+    params.set("limit", "10");
+    const res  = await fetch(`/api/history?${params.toString()}`);
     const rows = await res.json();
 
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="4" class="empty-row">No records for ${uc}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-row">No records found</td></tr>`;
       return;
     }
-    tbody.innerHTML = rows.map(r => `
+    tbody.innerHTML = rows.map(r => {
+      const netLabel = (r.network && NETWORK_CODE_MAP[r.network])
+        ? NETWORK_CODE_MAP[r.network] : (r.network || "—");
+      return `
       <tr>
-        <td title="${r.tcoe_id || ''}">${r.tcoe_id || "—"}</td>
-        <td>${r.network || "—"}</td>
+        <td title="${escapeHtml(r.tcoe_id || "")}">${escapeHtml(r.tcoe_id || "—")}</td>
+        <td title="${escapeHtml(r.network || "")}">${escapeHtml(netLabel)}</td>
         <td>${padSeq(r.sequence)}</td>
-        <td class="desc-cell" title="${r.description || ''}">${r.description || "—"}</td>
-      </tr>
-    `).join("");
+        <td class="desc-cell" title="${escapeHtml(r.description || "")}">${escapeHtml(r.description || "—")}</td>
+      </tr>`;
+    }).join("");
   } catch {
     tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Error loading history</td></tr>`;
   }
@@ -316,6 +327,16 @@ function padSeq(n) {
   return n != null ? String(n).padStart(9, "0") : "—";
 }
 
+// Escape user-controlled text before inserting into HTML (prevents XSS).
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // ── KEYBOARD SHORTCUT ─────────────────────────
 document.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") openGenerateConfirm();
@@ -325,7 +346,7 @@ document.addEventListener("keydown", e => {
 window.addEventListener("DOMContentLoaded", () => {
   setupInstallHandlers();
   const hc = document.getElementById("histCase");
-  if (hc && hc.value) loadHistory();
+  if (hc) loadHistory();
   const btnGen   = document.getElementById("confirmGenerate");
   const btnRes   = document.getElementById("confirmReset");
   const btnClose = document.getElementById("confirmClose");

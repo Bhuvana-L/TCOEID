@@ -184,8 +184,22 @@
       <div class="history-controls">
         <div class="select-wrap">
           <select id="histCase" onchange="loadHistory()" aria-label="Select use case for history">
+            <option value="">All Use Cases</option>
             {% for uc in use_cases %}
             <option value="{{ uc }}">{{ uc }}</option>
+            {% endfor %}
+          </select>
+          <span class="select-arrow" aria-hidden="true">▾</span>
+        </div>
+        <div class="select-wrap">
+          <select id="histNetwork" onchange="loadHistory()" aria-label="Select network for history">
+            <option value="">All Networks</option>
+            {% for caller, combos in network_combo_groups.items() %}
+            <optgroup label="{{ caller }}">
+              {% for code, receiver in combos %}
+              <option value="{{ code }}">{{ caller }} → {{ receiver }}</option>
+              {% endfor %}
+            </optgroup>
             {% endfor %}
           </select>
           <span class="select-arrow" aria-hidden="true">▾</span>
@@ -206,7 +220,7 @@
         </thead>
         <tbody id="histBody">
           <tr>
-            <td colspan="4" class="empty-row">Select a use case above to view history</td>
+            <td colspan="4" class="empty-row">Loading…</td>
           </tr>
         </tbody>
       </table>
@@ -236,6 +250,11 @@
     </div>
   </div>
 </div>
+
+<!-- Network code → label map for history display -->
+<script>
+  const NETWORK_CODE_MAP = {{ network_code_labels | tojson }};
+</script>
 
 <!-- ── JS ────────────────────────────────────── -->
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
