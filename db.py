@@ -6,9 +6,9 @@ HOW IT WORKS
 ────────────
 1.  At startup, reads DATABASE_URL from config.py.
 2.  If DATABASE_URL is set → tries to connect to the real DB.
-       Success → uses real DB, demo mode OFF.
-       Failure → logs a warning, falls back to demo DB automatically.
-3.  If DATABASE_URL is empty → demo mode ON immediately.
+       Success → uses real DB, local mode OFF.
+       Failure → logs a warning, falls back to local DB automatically.
+3.  If DATABASE_URL is empty → local mode ON immediately.
 
 Nokia's table/column names are auto-discovered by inspecting the schema.
 Nothing in this file needs to change regardless of the DB platform.
@@ -26,19 +26,19 @@ from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool, StaticPool
 
-import config                          # imported as module so USE_DEMO_DATA
+import config                          # imported as module so USE_LOCAL_DATA
                                        # can be mutated at runtime
 
 logger = logging.getLogger(__name__)
 _lock  = threading.Lock()
 
 # ──────────────────────────────────────────────────────────────
-#  DEMO SEED DATA
+#  LOCAL SEED DATA
 #  ID format: {USE_CASE}{NET_CODE_3}{SEQ_3}--
 #  e.g. BCALL009004-- = BCALL · 4G→4G (009) · 4th test case
 # ──────────────────────────────────────────────────────────────
 
-_DEMO_ROWS = [
+_LOCAL_ROWS = [
     # (tcoe_id,             use_case, network, seq, description)
     # ID format: {USE_CASE}{zfill(9: int(NET)+SEQ_3)}--{desc}
     # e.g. code=009,seq=1 → 9+"001"="9001" → zfill(9)="000009001"
@@ -119,8 +119,8 @@ _DEMO_ROWS = [
 ]
 
 
-def _seed_demo(engine) -> None:
-    """Create the demo table and insert sample rows (idempotent)."""
+def _seed_local(engine) -> None:
+    """Create the local table and insert sample rows (idempotent)."""
     with engine.begin() as c:
         c.execute(text("""
             CREATE TABLE IF NOT EXISTS tcoe_master (
@@ -136,12 +136,12 @@ def _seed_demo(engine) -> None:
                 (tcoe_id, use_case, network_type, sequence_number, description)
             VALUES (:a, :b, :c, :d, :e)
         """), [{"a": r[0], "b": r[1], "c": r[2], "d": r[3], "e": r[4]}
-               for r in _DEMO_ROWS])
-    logger.info("Demo DB seeded — %d rows available.", len(_DEMO_ROWS))
+               for r in _LOCAL_ROWS])
+    logger.info("Local DB seeded — %d rows available.", len(_LOCAL_ROWS))
 
 
 # ──────────────────────────────────────────────────────────────
-#  ENGINE  —  auto-detect real DB vs demo
+#  ENGINE  —  auto-detect real DB vs local
 # ──────────────────────────────────────────────────────────────
 
 _engine = None
@@ -162,14 +162,14 @@ def _build_real_engine(url: str):
     return engine
 
 
-def _build_demo_engine():
-    """Create the file-based SQLite demo engine and seed it."""
-    db_path = os.path.join(os.path.dirname(__file__), "demo.db")
+def _build_local_engine():
+    """Create the file-based SQLite local engine and seed it."""
+    db_path = os.path.join(os.path.dirname(__file__), "local.db")
     engine  = create_engine(
         f"sqlite:///{db_path}",
         connect_args={"check_same_thread": False},
     )
-    _seed_demo(engine)
+    _seed_local(engine)
     return engine
 
 
@@ -185,22 +185,22 @@ def _get_engine():
         logger.info("Attempting connection to real database...")
         try:
             _engine = _build_real_engine(url)
-            config.USE_DEMO_DATA = False          # real DB is live
+            config.USE_LOCAL_DATA = False          # real DB is live
             logger.info("✅  Connected to real database: %s",
                         url.split("@")[-1])       # log host only, not credentials
         except (OperationalError, SQLAlchemyError, Exception) as exc:
             logger.warning(
                 "⚠️  Could not connect to '%s': %s\n"
-                "    Falling back to demo database automatically.",
+                "    Falling back to local database automatically.",
                 url.split("@")[-1], exc
             )
-            config.USE_DEMO_DATA = True
-            _engine = _build_demo_engine()
+            config.USE_LOCAL_DATA = True
+            _engine = _build_local_engine()
     else:
-        # No URL configured — use demo
-        config.USE_DEMO_DATA = True
-        logger.info("No DATABASE_URL set — running in demo mode.")
-        _engine = _build_demo_engine()
+        # No URL configured — use local
+        config.USE_LOCAL_DATA = True
+        logger.info("No DATABASE_URL set — running in local mode.")
+        _engine = _build_local_engine()
 
     return _engine
 
@@ -301,7 +301,7 @@ def _detect_schema() -> dict:
         else:
             mapping[role] = None          # column not found — optional
 
-    mode = "DEMO" if config.USE_DEMO_DATA else "LIVE"
+    mode = "LOCAL" if config.USE_LOCAL_DATA else "LIVE"
     logger.info("[%s] Schema → table=%s  cols=%s",
                 mode, table_name,
                 {k: v for k, v in mapping.items() if k != "table"})
@@ -448,6 +448,9 @@ def generate_next_id(use_case: str, network_code: str,
 
 def get_history(use_case: str, limit: int = 10, network: str="") -> list[dict]:
     """Return the last N TCOE IDs for a given use_case."""
+    
+def get_history(use_case: str = "", network: str = "", limit: int = 10) -> list[dict]:
+    """Return the last N TCOE IDs, optionally filtered by use_case and/or network."""
     try:
         s        = _detect_schema()
         table    = s["table"]
@@ -462,11 +465,25 @@ def get_history(use_case: str, limit: int = 10, network: str="") -> list[dict]:
 
         order_col = seq_col or id_col
         desc_expr = desc_col if desc_col else "''"
+
         net_filter = ""
         params = {"uc": use_case.upper(), "lim": limit}
         if network and net_col:
             net_filter = f"AND {net_col} = :net"
             params["net"] = network
+
+
+        where_clauses = []
+        params: dict = {"lim": limit}
+        if use_case:
+            where_clauses.append(f"UPPER({uc_col}) = :uc")
+            params["uc"] = use_case.upper()
+        if network and net_col:
+            where_clauses.append(f"{net_col} = :net")
+            params["net"] = network
+        where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+
         with _conn() as c:
             rows = c.execute(text(f"""
                 SELECT {id_col},
@@ -475,11 +492,18 @@ def get_history(use_case: str, limit: int = 10, network: str="") -> list[dict]:
                        {net_col   if net_col  else "''"},
                        {desc_expr}
                 FROM   {table}
+
                 WHERE UPPER({uc_col}) = :uc
                 {net_filter}
                 ORDER BY {(net_col + ", ") if net_col else ""}CAST({order_col} AS INTEGER) DESC
                 LIMIT :lim
              """), params).fetchall()
+
+                {where_sql}
+                ORDER  BY CAST({order_col} AS INTEGER) DESC
+                LIMIT  :lim
+            """), params).fetchall()
+
 
         return [{"tcoe_id":     r[0], "use_case":    r[1],
                  "sequence":    r[2], "network":     r[3],
@@ -497,11 +521,11 @@ def get_db_status() -> dict:
     Called by the /api/status endpoint for the UI indicator.
     """
     return {
-        "demo_mode":    config.USE_DEMO_DATA,
-        "connected":    not config.USE_DEMO_DATA,
+        "local_mode":    config.USE_LOCAL_DATA,
+        "connected":    not config.USE_LOCAL_DATA,
         "database_url": (config.DATABASE_URL.split("@")[-1]
                          if config.DATABASE_URL and "@" in config.DATABASE_URL
-                         else ("demo" if config.USE_DEMO_DATA else config.DATABASE_URL)),
+                         else ("local" if config.USE_LOCAL_DATA else config.DATABASE_URL)),
     }
 
 

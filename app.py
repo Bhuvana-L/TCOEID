@@ -6,6 +6,7 @@ Nokia UATMN Master Database Integration
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from db import get_use_cases, generate_next_id, get_db_status
 from network_mapping import get_network_code, get_network_pairs, NETWORK_OPTIONS
+from network_mapping import get_network_code, NETWORK_OPTIONS, NETWORK_COMBO_GROUPS, NETWORK_CODE_LABE
 import logging
 import os
 
@@ -32,7 +33,9 @@ def index():
                            use_cases=use_cases,
                            network_pairs=get_network_pairs(),
                            network_options=NETWORK_OPTIONS,
-                           db_status=db_status)
+                           db_status=db_status,
+                           network_combo_groups=NETWORK_COMBO_GROUPS,
+                           network_code_labels=NETWORK_CODE_LABELS)
 
 
 # ── API: DB STATUS ────────────────────────────────────────────
@@ -144,11 +147,21 @@ def api_history():
     for r in rows:
         r["network_label"] = labels.get(str(r.get("network")), r.get("network"))
     return jsonify(rows)
+    """GET /api/history?use_case=BCALL&network=009&limit=10"""
+    from db import get_history
+    use_case = request.args.get("use_case", "").strip().upper()
+    network  = request.args.get("network", "").strip()
+    try:
+        limit = int(request.args.get("limit", 10))
+    except (ValueError, TypeError):
+        limit = 10
+    limit = max(1, min(limit, 100))
+    return jsonify(get_history(use_case, network, limit))
 
 
 # ── ENTRY POINT ───────────────────────────────────────────────
 if __name__ == "__main__":
-    # use_reloader=False keeps the in-memory demo DB alive.
+    # use_reloader=False keeps the in-memory local DB alive.
     # When DATABASE_URL points to a real DB this restriction is lifted.
     import config
-    app.run(debug=True, port=5000, use_reloader=config.USE_DEMO_DATA is False)
+    app.run(debug=True, port=5000, use_reloader=config.USE_LOCAL_DATA is False)

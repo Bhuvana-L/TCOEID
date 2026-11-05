@@ -3,7 +3,9 @@
    Nokia UATMN PWA
 ───────────────────────────────────────── */
 
+
 const CACHE_NAME = "tcoe-v6";
+const CACHE_NAME = "tcoe-v13";
 const STATIC_ASSETS = [
   "/",
   "/static/css/style.css",

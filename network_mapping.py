@@ -142,3 +142,22 @@ NETWORK_OPTIONS: list[str] = [
     "OTHER_OPERATOR",
     "PORTIN",
 ]
+
+
+# ── Reverse mappings for UI dropdowns & history display ─────────
+# code → "Caller → Receiver" label (used by the history table to show
+# a readable network combination instead of the raw 3-digit code).
+NETWORK_CODE_LABELS: dict[str, str] = {
+    code: f"{caller} → {receiver}"
+    for (caller, receiver), code in NETWORK_MAPPING.items()
+}
+
+# Network combinations grouped by caller network, for the history
+# filter dropdown.  Each group is sorted by receiver network.
+NETWORK_COMBO_GROUPS: dict[str, list[tuple[str, str]]] = {}
+for _net in NETWORK_OPTIONS:
+    NETWORK_COMBO_GROUPS[_net] = []
+for (_caller, _receiver), _code in NETWORK_MAPPING.items():
+    NETWORK_COMBO_GROUPS[_caller].append((_code, _receiver))
+for _net in NETWORK_COMBO_GROUPS:
+    NETWORK_COMBO_GROUPS[_net].sort(key=lambda x: x[1])
