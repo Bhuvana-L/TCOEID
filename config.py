@@ -8,10 +8,10 @@ HOW TO CONNECT NOKIA'S UATMN DATABASE
 2. Restart the app.  That's it.  Nothing else changes.
 
 The app detects the connection automatically:
-  • If DATABASE_URL points to a real, reachable database  → uses it, demo OFF
-  • If the connection fails or DATABASE_URL is not set     → falls back to demo DB
+  • If DATABASE_URL points to a real, reachable database  → uses it, local OFF
+  • If the connection fails or DATABASE_URL is not set     → falls back to local DB
 
-You do NOT need to change USE_DEMO_DATA manually.
+You do NOT need to change USE_LOCAL_DATA manually.
 You do NOT need to know the table name or column names in advance.
 The app auto-discovers them at startup.
 
@@ -65,7 +65,7 @@ import os
 # ── 1. DATABASE URL ────────────────────────────────────────────────────────
 #
 #  Set this to Nokia's DB URL.
-#  Leave as "" (empty string) to stay in demo mode.
+#  Leave as "" (empty string) to stay in local mode.
 #
 DATABASE_URL: str = os.getenv("DATABASE_URL", "")
 
@@ -90,7 +90,7 @@ TCOE_TABLE: str = os.getenv("TCOE_TABLE", "")
 EXTRA_COLUMN_HINTS: dict[str, list[str]] = {}
 
 # ── INTERNAL — do not edit ─────────────────────────────────────────────────
-#  USE_DEMO_DATA is set automatically by db.py based on whether
+#  USE_LOCAL_DATA is set automatically by db.py based on whether
 #  DATABASE_URL is set AND the connection succeeds.
 #  You never need to touch this flag.
-USE_DEMO_DATA: bool = not bool(DATABASE_URL.strip())
+USE_LOCAL_DATA: bool = not bool(DATABASE_URL.strip())

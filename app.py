@@ -146,7 +146,7 @@ def api_history():
 
 # ── ENTRY POINT ───────────────────────────────────────────────
 if __name__ == "__main__":
-    # use_reloader=False keeps the in-memory demo DB alive.
+    # use_reloader=False keeps the in-memory local DB alive.
     # When DATABASE_URL points to a real DB this restriction is lifted.
     import config
-    app.run(debug=True, port=5000, use_reloader=config.USE_DEMO_DATA is False)
+    app.run(debug=True, port=5000, use_reloader=config.USE_LOCAL_DATA is False)

@@ -109,9 +109,6 @@ body {
   color: var(--success);
 }
 
-.status-indicator.demo { color: var(--yellow); }
-.status-indicator.demo .status-dot { background: var(--yellow); }
-
 .status-dot {
   width: 7px;
   height: 7px;

@@ -15,9 +15,9 @@ venv/
 env/
 .env
 
-# ── Demo / local database ──────────────────────
-# demo.db is auto-generated at runtime — do not commit it
-demo.db
+# ── Local database ──────────────────────────
+# local.db is auto-generated at runtime — do not commit it
+local.db
 *.db
 *.sqlite3
 

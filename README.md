@@ -43,7 +43,7 @@ Before installing, ensure the following are available on your system:
 | Oracle | cx_Oracle | `pip install cx_Oracle` |
 | SQLite | *(none — built into Python)* | — |
 
-No additional drivers are needed to run the application in demo mode (SQLite is included with Python by default).
+No additional drivers are needed to run the application in local mode (SQLite is included with Python by default).
 
 ---
 
@@ -91,13 +91,13 @@ This installs Flask, SQLAlchemy, and all required sub-dependencies. The full lis
 
 ### Step 4 — Install an optional database driver (only if needed)
 
-If you are connecting to a real database (not demo mode), install the matching driver from the table in [Section 1](#1-prerequisites). For example:
+If you are connecting to a real database (not local mode), install the matching driver from the table in [Section 1](#1-prerequisites). For example:
 
 ```bash
 pip install psycopg2-binary    # PostgreSQL
 ```
 
-Skip this step if you are running in demo mode (SQLite, no driver needed).
+Skip this step if you are running in local mode (SQLite, no driver needed).
 
 ### Step 5 — Verify the installation
 
@@ -129,7 +129,7 @@ Navigate to:
 http://localhost:5000
 ```
 
-The application is now running. If no `DATABASE_URL` is configured (see [Section 4](#4-connecting-to-nokias-database)), the app starts in **demo mode** using a local SQLite database (`demo.db`) that is automatically created and pre-seeded with sample records. No additional setup is required.
+The application is now running. If no `DATABASE_URL` is configured (see [Section 4](#4-connecting-to-nokias-database)), the app starts in **local mode** using a local SQLite database (`local.db`) that is automatically created and pre-seeded with sample records. No additional setup is required.
 
 ### Stop the server
 
@@ -156,7 +156,7 @@ DATABASE_URL = "postgresql://user:password@host:5432/dbname"
 python app.py
 ```
 
-The application will attempt to connect at startup. On success, it switches to live database mode. If the connection fails for any reason, it automatically falls back to demo mode — the application remains fully functional.
+The application will attempt to connect at startup. On success, it switches to live database mode. If the connection fails for any reason, it automatically falls back to local mode — the application remains fully functional.
 
 ### Database URL formats by platform
 
@@ -222,7 +222,7 @@ If a column is not found, it is treated as optional and the application continue
 - Works with SQLite, MySQL, PostgreSQL, MS SQL Server, and Oracle
 - Auto-detects the correct table and column names at startup by inspecting the schema
 - Zero code changes required to switch databases — only `config.py` is edited
-- Automatic fallback to a local demo database if the live connection is unavailable
+- Automatic fallback to a local database if the live connection is unavailable
 
 **Progressive Web App**
 - Installable on desktop and mobile devices
@@ -330,9 +330,9 @@ Returns the current database connection state.
 **Response:**
 ```json
 {
-  "demo_mode": true,
+  "local_mode": true,
   "connected": false,
-  "database_url": "demo"
+  "database_url": "local"
 }
 ```
 
@@ -436,7 +436,7 @@ GET /api/history?use_case=BCALL&network=009&limit=10
                    │  Database                   │
                    │  SQLite · MySQL · Postgres  │
                    │  MS SQL · Oracle            │
-                   │  (or local demo fallback)    │
+                   │  (or local fallback)    │
                    └─────────────────────────────┘
 ```
 
@@ -485,7 +485,7 @@ The application is an installable Progressive Web App:
 |---------|----------|
 | `ModuleNotFoundError: No module named 'flask'` | Run `pip install -r requirements.txt` from the project root |
 | `ModuleNotFoundError: No module named 'pymysql'` | Install the driver for your database platform — see [Section 1](#1-prerequisites) |
-| Page loads but says "demo mode" | `DATABASE_URL` in `config.py` is empty or the connection failed. Set the URL and restart |
+| Page loads but says "local mode" | `DATABASE_URL` in `config.py` is empty or the connection failed. Set the URL and restart |
 | `Could not detect use_case or sequence column` | Nokia's column names do not match the defaults. Add them to `EXTRA_COLUMN_HINTS` in `config.py` |
 | `No mapping defined for X → Y` | The selected (Caller, Receiver) pair is not in `network_mapping.py`. Add it and restart |
 | Port 5000 already in use | Another process is using port 5000. Stop it, or change the port in the `app.run()` call at the bottom of `app.py` |
@@ -526,7 +526,7 @@ TCOEID/
 ├── config.py              # Configuration — edit this to connect to Nokia's database
 ├── network_mapping.py     # (Caller, Receiver) → 3-digit network code mapping table
 ├── requirements.txt       # Pinned Python dependencies
-├── demo.db                # SQLite demo database (auto-created on first run)
+├── local.db                # SQLite local database (auto-created on first run)
 ├── static/
 │   ├── css/
 │   │   └── style.css       # Application styling
