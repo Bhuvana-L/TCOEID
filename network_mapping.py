@@ -127,6 +127,10 @@ def get_network_code(caller: str, receiver: str) -> str | None:
     key = (caller.strip().upper(), receiver.strip().upper())
     return NETWORK_MAPPING.get(key)
 
+def get_network_pairs() -> list[dict]:
+    return [{"code": code, "label": f"{c} → {r}"} 
+            for (c, r), code in NETWORK_MAPPING.items()]
+
 
 # ── Ordered list for UI dropdowns ─────────────────────────────
 NETWORK_OPTIONS: list[str] = [

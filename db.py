@@ -446,7 +446,7 @@ def generate_next_id(use_case: str, network_code: str,
             return {"error": str(e)}
 
 
-def get_history(use_case: str, limit: int = 10) -> list[dict]:
+def get_history(use_case: str, limit: int = 10, network: str="") -> list[dict]:
     """Return the last N TCOE IDs for a given use_case."""
     try:
         s        = _detect_schema()
@@ -462,6 +462,11 @@ def get_history(use_case: str, limit: int = 10) -> list[dict]:
 
         order_col = seq_col or id_col
         desc_expr = desc_col if desc_col else "''"
+        net_filter = ""
+        params = {"uc": use_case.upper(), "lim": limit}
+        if network and net_col:
+            net_filter = f"AND {net_col} = :net"
+            params["net"] = network
         with _conn() as c:
             rows = c.execute(text(f"""
                 SELECT {id_col},
@@ -470,10 +475,11 @@ def get_history(use_case: str, limit: int = 10) -> list[dict]:
                        {net_col   if net_col  else "''"},
                        {desc_expr}
                 FROM   {table}
-                WHERE  UPPER({uc_col}) = :uc
-                ORDER  BY CAST({order_col} AS INTEGER) DESC
-                LIMIT  :lim
-            """), {"uc": use_case.upper(), "lim": limit}).fetchall()
+                WHERE UPPER({uc_col}) = :uc
+                {net_filter}
+                ORDER BY {(net_col + ", ") if net_col else ""}CAST({order_col} AS INTEGER) DESC
+                LIMIT :lim
+             """), params).fetchall()
 
         return [{"tcoe_id":     r[0], "use_case":    r[1],
                  "sequence":    r[2], "network":     r[3],

@@ -191,6 +191,15 @@
           <span class="select-arrow" aria-hidden="true">▾</span>
         </div>
         <button class="btn-secondary" onclick="loadHistory()" aria-label="Refresh history">
+          <div class="select-wrap">
+           <select id="histNet" onchange="loadHistory()" aria-label="Select network for history">
+            <option value="">All networks</option>
+            {% for p in network_pairs %}
+            <option value="{{ p.code }}">{{ p.label }}</option>
+            {% endfor %}
+           </select>
+           <span class="select-arrow" aria-hidden="true">▾</span>
+          </div>
           Refresh
         </button>
       </div>

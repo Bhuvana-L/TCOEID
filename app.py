@@ -5,7 +5,7 @@ Nokia UATMN Master Database Integration
 
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from db import get_use_cases, generate_next_id, get_db_status
-from network_mapping import get_network_code, NETWORK_OPTIONS
+from network_mapping import get_network_code, get_network_pairs, NETWORK_OPTIONS
 import logging
 import os
 
@@ -30,6 +30,7 @@ def index():
     db_status  = get_db_status()
     return render_template("index.html",
                            use_cases=use_cases,
+                           network_pairs=get_network_pairs(),
                            network_options=NETWORK_OPTIONS,
                            db_status=db_status)
 
@@ -130,11 +131,19 @@ def api_generate():
 # ── API: HISTORY ──────────────────────────────────────────────
 @app.route("/api/history")
 def api_history():
-    """GET /api/history?use_case=BCALL&limit=10"""
     from db import get_history
     use_case = request.args.get("use_case", "").strip().upper()
-    limit    = int(request.args.get("limit", 10))
-    return jsonify(get_history(use_case, limit))
+    network = request.args.get("network", "").strip()
+    caller = request.args.get("caller", "").strip()
+    receiver = request.args.get("receiver", "").strip()
+    if caller and receiver:
+      network = get_network_code(caller, receiver) or "none"
+    limit = int(request.args.get("limit", 10))
+    labels = {p["code"]: p["label"] for p in get_network_pairs()}
+    rows = get_history(use_case, limit, network)
+    for r in rows:
+        r["network_label"] = labels.get(str(r.get("network")), r.get("network"))
+    return jsonify(rows)
 
 
 # ── ENTRY POINT ───────────────────────────────────────────────

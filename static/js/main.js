@@ -75,6 +75,7 @@ function onUseCaseChange(value) {
 
   hideError();
   hideResult();
+  syncHistory();
 }
 
 // ── CONFERENCE: ADD PARTICIPANT ───────────────
@@ -93,7 +94,7 @@ function addParticipant() {
     </div>
     <div class="field participant-select">
       <div class="select-wrap">
-        <select class="participant-net" aria-label="Participant ${idx} network">
+        <select class="participant-net" aria-label="Participant ${idx} network" onchange="syncHistory()">
           <option value="">— Select —</option>
           ${options}
         </select>
@@ -118,6 +119,7 @@ function removeParticipant(btn) {
   }
   btn.closest(".participant-row").remove();
   _renumberParticipants();
+  syncHistory();
 }
 
 function _renumberParticipants() {
@@ -187,8 +189,7 @@ async function generateID() {
       showError(data.error || "Unknown server error");
     } else {
       showResult(data, isConf);
-      const hc = document.getElementById("histCase");
-      if (hc) { hc.value = uc; loadHistory(); }
+      syncHistory();
     }
   } catch (err) {
     showError("Network error — " + err.message);
@@ -265,25 +266,67 @@ function fallbackCopy(text) {
 }
 
 // ── HISTORY ───────────────────────────────────
+function currentPair() {
+  const uc = document.getElementById("useCase").value.trim();
+  if (uc.toUpperCase() === "CONFE") {
+    const sel = document.querySelectorAll(".participant-net");
+    return {
+      caller: sel.length > 0 ? sel[0].value.trim() : "",
+      receiver: sel.length > 0 ? sel[sel.length - 1].value.trim() : "",
+    };
+  }
+  return {
+    caller: document.getElementById("callerNet").value.trim(),
+    receiver: document.getElementById("receiverNet").value.trim(),
+  };
+}
+
+function syncHistory() {
+  const uc = document.getElementById("useCase").value.trim();
+  const hc = document.getElementById("histCase");
+  if (uc && hc) hc.value = uc;
+  loadHistory();
+}
+
+let historyReq = 0;
+
 async function loadHistory() {
-  const uc    = document.getElementById("histCase").value;
+  const myReq = ++historyReq;
+  const uc = document.getElementById("histCase").value;
+  const { caller, receiver } = currentPair();
   const tbody = document.getElementById("histBody");
+
+  if (!uc || !caller || !receiver) {
+    tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Select a use case, caller and receiver network to see its history</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Loading…</td></tr>`;
 
   try {
-    const res  = await fetch(`/api/history?use_case=${encodeURIComponent(uc)}&limit=10`);
+    const res = await fetch(
+      `/api/history?use_case=${encodeURIComponent(uc)}` +
+      `&caller=${encodeURIComponent(caller)}&receiver=${encodeURIComponent(receiver)}&limit=500`);
     const rows = await res.json();
+    if (myReq !== historyReq) return;
 
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="4" class="empty-row">No records for ${uc}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-row">No IDs yet for ${uc} · ${caller} → ${receiver}</td></tr>`;
       return;
     }
-    tbody.innerHTML = rows.map(r => `
+
+    const head = `
       <tr>
-        <td title="${r.tcoe_id || ''}">${r.tcoe_id || "—"}</td>
-        <td>${r.network || "—"}</td>
+        <td colspan="4" style="background:#eef3fb;color:#2f6fed;font-weight:600;padding:10px 12px">
+          ${uc} · ${caller} → ${receiver} — ${rows.length} ID${rows.length > 1 ? "s" : ""}
+        </td>
+      </tr>`;
+    tbody.innerHTML = head + rows.map(r => `
+      <tr>
+        <td>${r.tcoe_id || "—"}</td>
+        <td>${r.network_label || r.network || "—"}</td>
         <td>${padSeq(r.sequence)}</td>
-        <td class="desc-cell" title="${r.description || ''}">${r.description || "—"}</td>
+        <td>${r.description || "—"}</td>
       </tr>
     `).join("");
   } catch {
@@ -324,8 +367,7 @@ document.addEventListener("keydown", e => {
 // ── INIT ──────────────────────────────────────
 window.addEventListener("DOMContentLoaded", () => {
   setupInstallHandlers();
-  const hc = document.getElementById("histCase");
-  if (hc && hc.value) loadHistory();
+  loadHistory();
   const btnGen   = document.getElementById("confirmGenerate");
   const btnRes   = document.getElementById("confirmReset");
   const btnClose = document.getElementById("confirmClose");
